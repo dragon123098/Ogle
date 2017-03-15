@@ -16,10 +16,35 @@ int main()
 
 
 
-//Make Circle
-  sf::CircleShape circle(100);
-  circle.setFillColor(sf::Color::Green);
-  circle.setPosition(200,200);
+//Make Enemy/Circle
+sf::Texture circle_texture;
+if(!circle_texture.loadFromFile("Assets/EnemyDog.png"))
+{
+  std::cout << "Error loading texture" << std::endl;
+}
+sf::Sprite circle;
+circle.setTexture(circle_texture);
+
+circle.setScale(sf::Vector2f(5,5));
+circle.setPosition(100,100);
+
+
+
+
+
+//Add in Font
+sf::Font font;
+if(!font.loadFromFile("assets/ARCADECLASSIC.TTF"))
+{
+  std::cout << "Error loading font" << std::endl;
+}
+sf::Text livesDisp;
+livesDisp.setFont(font);
+livesDisp.setCharacterSize(24);
+livesDisp.setColor(sf::Color::Blue);
+
+
+
 //Make Hero
   sf::Texture hero_texture;
   if(!hero_texture.loadFromFile("Assets/Hero.png"))
@@ -31,10 +56,34 @@ int main()
 
   hero.setScale(sf::Vector2f(3,3));
 
+  //Make Rock
+  sf::Texture rock_texture;
+  if(!rock_texture.loadFromFile("Assets/ROCK.png"))
+  {
+    std::cout << "Error loading rock" << std::endl;
+  }
+
+  sf::Sprite rock;
+  rock.setTexture(rock_texture);
+  rock.setScale(sf::Vector2f(3,3));
+  rock.setPosition(30,250);
+
+
+
+
+
+
+
+
 
   int circleDirection = 0;
-  double speed = 1;
-  int points = 10;
+
+
+  double speed = .7;
+
+  int lives = 10;
+
+  bool takingDamage = false;
 
   //Game loop
   while(window.isOpen())
@@ -50,30 +99,62 @@ int main()
       }
 
     }
+
+
+    //Control movement
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && hero.getPosition().y > 0)
     {
-      hero.move(0,-speed);
+      hero.move(50,-speed);
+      if(hero.getGlobalBounds().intersects(rock.getGlobalBounds()))
+      {
+        hero.move(0,speed);
+      }
     }
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && hero.getPosition().y<HIGH-TILESIZE)
     {
       hero.move(0,speed);
+      if(hero.getGlobalBounds().intersects(rock.getGlobalBounds()))
+      {
+        hero.move(0,-speed);
+      }
     }
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left)&& hero.getPosition().x > 0)
     {
       hero.move(-speed,0);
+      if(hero.getGlobalBounds().intersects(rock.getGlobalBounds()))
+      {
+        hero.move(speed,0);
+      }
     }
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && hero.getPosition().x<WIDE-TILESIZE)
     {
       hero.move(speed,0);
+      if(hero.getGlobalBounds().intersects(rock.getGlobalBounds()))
+      {
+        hero.move(-speed,0);
+      }
     }
 
+
+    //Colide with Enemy
     if(hero.getGlobalBounds().intersects(circle.getGlobalBounds()))
     {
-
-      std::cout << "                      ****************************************                                         Touching circle" << std::endl;
+      if(takingDamage == false)
+      {
+        lives--;
+        takingDamage = true;
+      }
+    }
+    else
+    {
+      takingDamage = false;
     }
 
-    window.clear(sf::Color::Blue);
+
+
+    livesDisp.setString(std::to_string(lives));
+
+     window.clear(sf::Color::White);
     //controls circle movment
     if(circleDirection == 0)
     {
@@ -92,15 +173,16 @@ int main()
       circleDirection = 0;
     }
 
-    //circle.move(3,0.00001);
-    //render. This is Max
-    //Draw hero
+    //Draw Text
+    window.draw(livesDisp);
+    //Drow hero
     window.draw(hero);
     //Draw Circle
     window.draw(circle);
-    //Display the stuff
+    //Draw Rock
+    window.draw(rock);
+    //Display all stuff
     window.display();
-
 
   }
 }
