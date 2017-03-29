@@ -1,10 +1,11 @@
 # include <SFML/Graphics.hpp>
+# include <SFML/Audio.hpp>
 #define WIDE 800
 #define HIGH 640
 # include <iostream>
 #define TILESIZE 32
 #include <vector>
-
+#include <math.h>
 
 
 bool testCall(sf::Sprite a, sf::Sprite b)
@@ -42,11 +43,12 @@ int main()
     map.push_back(temp);
   }
 
+  map[12][3] = true;
+  for (int i=0; i < 7; i ++)
+  {
+      map[i][9] = true;
+  }
 
-  map[3][2] = true;
-  map[3][3] = true;
-  map[3][4] = true;
-  map[2][10] = true;
   for(int i=0; i<map.size(); i++)
   {
       for(int j=0; j<map[i].size(); j++)
@@ -123,7 +125,27 @@ livesDisp.setColor(sf::Color::Blue);
   {
     std::cout << "Error loading rock" << std::endl;
   }
+  //Sounds
+  sf::SoundBuffer grunt_buffer;
+  if(!grunt_buffer.loadFromFile("assets/grunt.wav"))
+  {
+    std::cout << "Error loading sound" << std::endl;
+  }
+  sf::Sound grunt;
+  grunt.setBuffer(grunt_buffer);
+  grunt.setPitch(1);
 
+  sf::SoundBuffer music_buffer;
+  if(!music_buffer.loadFromFile("assets/Lolita Compiex.wav"))
+  {
+    std::cout << "Error loading sound" << std::endl;
+  }
+  sf::Sound music;
+  grunt.setBuffer(music_buffer);
+  music.setLoop(true);
+
+
+  music.play();
 
   //He likes to eat butterflies
   std::vector<sf::Sprite> wallArr;
@@ -143,11 +165,16 @@ livesDisp.setColor(sf::Color::Blue);
         }
     }
 
-
-
-
-
-
+  //Homing enemy
+  sf::Texture Henemy;
+  if(!Henemy.loadFromFile("assets/EnemyDog.png"))
+  {
+    std::cout << "Error loading henemy texture" << std::endl;
+  }
+  sf::Sprite henemy;
+  henemy.setTexture(enemy_texture);
+  henemy.setScale(sf::Vector2f(5,5));
+  henemy.setPosition(43,65);
 
 
 
@@ -161,6 +188,11 @@ livesDisp.setColor(sf::Color::Blue);
   int lives = 10;
 
   bool takingDamage = false;
+
+  double homingX = 0.5;
+  double homingY = 0.5;
+  double homingDist = 0;
+
 
   //Game loop
   while(window.isOpen())
@@ -218,6 +250,7 @@ livesDisp.setColor(sf::Color::Blue);
     {
       if(takingDamage == false)
       {
+        grunt.play();
         lives--;
         takingDamage = true;
       }
@@ -226,7 +259,17 @@ livesDisp.setColor(sf::Color::Blue);
     {
       takingDamage = false;
     }
-
+    if(testWallColl(enemy, wallArr))
+    {
+      if(enemyDirection == 0)
+      {
+        enemyDirection = 1;
+      }
+      else
+      {
+        enemyDirection = 0;
+      }
+    }
 
 
     livesDisp.setString(std::to_string(lives));
@@ -259,7 +302,10 @@ livesDisp.setColor(sf::Color::Blue);
       }
     }
 
-
+    homingDist = sqrt(pow(hero.getPosition().x - henemy.getPosition().x,2) + pow(hero.getPosition().y - henemy.getPosition().y,2));
+    homingX = (hero.getPosition().x - henemy.getPosition().x)/homingDist;
+    homingY = (hero.getPosition().y - henemy.getPosition().y)/homingDist;
+    henemy.move(homingX/2, homingY/2);
 
     //Draw Text
     window.draw(livesDisp);
@@ -274,7 +320,7 @@ livesDisp.setColor(sf::Color::Blue);
     }
     //Draw background
 
-
+    window.draw(henemy);
 
     //Display all stuff
     window.display();
